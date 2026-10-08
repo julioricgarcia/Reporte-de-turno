@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parte de Novedades - Supervisor</title>
+<style>
+:root{--blue:#075b91;--blue2:#0877bd;--bg:#f3f6f9;--green:#168a55;--orange:#e88920;--red:#d94b4b;--text:#173042}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{background:var(--blue);color:white;padding:18px 16px 14px;position:sticky;top:0;z-index:5}
+header h1{font-size:21px;margin:0 0 4px} header small{opacity:.9}
+main{max-width:620px;margin:auto;padding:14px 12px 80px}
+.card{background:white;border-radius:14px;padding:16px;margin-bottom:13px;box-shadow:0 2px 8px #00000010}
+label{display:block;font-weight:700;font-size:14px;margin:12px 0 6px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-radius:9px;font-size:15px;background:white}
+textarea{min-height:90px;resize:vertical}
+button{border:0;border-radius:10px;padding:13px 15px;font-weight:700;font-size:15px;cursor:pointer}
+.primary{background:var(--blue2);color:white;width:100%;margin-top:14px}.green{background:var(--green);color:white}.orange{background:var(--orange);color:white}.red{background:var(--red);color:white}.ghost{background:#eaf2f8;color:var(--blue)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.chips{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.chip{padding:13px 8px;border:1px solid #c9d9e5;border-radius:9px;text-align:center;background:#f8fbfd;font-weight:700;font-size:13px}
+.chip.active{border:2px solid var(--blue2);background:#e8f4fc}
+.hidden{display:none}.notice{padding:11px;border-radius:9px;background:#eef7fc;font-size:13px}
+.event{border-left:5px solid var(--blue2);padding:11px 12px;margin:9px 0;background:#f8fafc;border-radius:7px}
+.event small{color:#667}.event b{display:block;margin:3px 0}
+.report{white-space:pre-wrap;background:#fbfbfb;border:1px solid #ddd;padding:13px;border-radius:9px;font-size:14px;line-height:1.45}
+.badge{display:inline-block;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:bold;background:#eaf2f8;margin-top:5px}
+footer{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #ddd;padding:9px;display:flex;gap:7px;justify-content:center}
+footer button{flex:1;max-width:190px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Turnos Planta</h1>
+  <small>Parte de novedades del supervisor</small>
+</header>
+<main>
+<section class="card">
+  <div class="row">
+    <div><label>Fecha</label><input id="fecha" type="date"></div>
+    <div><label>Turno</label><select id="turno"><option>Mañana</option><option>Tarde</option><option>Noche</option></select></div>
+  </div>
+  <label>Lote general</label><input id="lote" placeholder="Ej.: 280-1-26">
+</section>
+
+<section id="alta" class="card">
+  <h2 style="margin:0 0 5px">⚡ Evento rápido</h2>
+  <div class="notice">Registrá solamente lo que ocurrió. No hace falta redactar el reporte.</div>
+
+  <label>Línea / máquina</label>
+  <select id="linea"></select>
+
+  <label>Tipo de novedad</label>
+  <div class="chips" id="tipos">
+    <div class="chip" data-v="Producción">🏭 Producción</div>
+    <div class="chip" data-v="Mantenimiento">🔧 Mantenimiento</div>
+    <div class="chip" data-v="Calidad">🛡️ Calidad</div>
+    <div class="chip" data-v="Personal">👷 Personal</div>
+    <div class="chip" data-v="Seguridad">⚠️ Seguridad</div>
+    <div class="chip" data-v="Otros">••• Otros</div>
+  </div>
+
+  <label>Descripción</label>
+  <textarea id="desc" placeholder="Ej.: Problemas con batea de rueda grande; la pasta se pega en túnel de frío."></textarea>
+
+  <label>Acción / solución</label>
+  <textarea id="accion" placeholder="Ej.: Se interviene mantenimiento y queda en seguimiento."></textarea>
+
+  <label>Estado</label>
+  <div class="chips" id="estados">
+    <div class="chip" data-v="Resuelto">✅ Resuelto</div>
+    <div class="chip" data-v="En proceso">🔄 En proceso</div>
+    <div class="chip" data-v="Pendiente">❗ Pendiente</div>
+  </div>
+
+  <label>Hora</label><input id="hora" type="time">
+  <button class="primary" onclick="guardarEvento()">Guardar novedad</button>
+</section>
+
+<section class="card">
+  <h2 style="margin:0">📋 Novedades registradas <span id="contador" class="badge">0</span></h2>
+  <div id="lista"></div>
+</section>
+
+<section class="card">
+  <h2 style="margin:0 0 6px">📄 Generar reporte de turno</h2>
+  <div class="notice">Convierte las novedades registradas en un texto ordenado por línea/máquina.</div>
+  <button class="primary" onclick="generarReporte()">Generar reporte</button>
+  <div id="reporteBox" class="hidden" style="margin-top:12px">
+    <div id="reporte" class="report"></div>
+    <button class="green" style="width:100%;margin-top:9px" onclick="copiarReporte()">Copiar reporte</button>
+  </div>
+</section>
+</main>
+<footer>
+<button class="ghost" onclick="limpiarTodo()">Nuevo turno</button>
+<button class="orange" onclick="window.print()">Imprimir / PDF</button>
+</footer>
+
+<script>
+const lineas = [
+"Disolución","SIG 268","Masticables","Nagemas","Túnel de calor",
+"Fabrima","Tecmar AC","AW251/250","Comprimidos","Pailas","Bombos"
+];
+let eventos=[], tipo="", estado="";
+
+function $(id){return document.getElementById(id)}
+function init(){
+  const d=new Date(); $("fecha").value=d.toISOString().slice(0,10);
+  $("hora").value=d.toTimeString().slice(0,5);
+  $("linea").innerHTML=lineas.map(x=>`<option>${x}</option>`).join("");
+  document.querySelectorAll("#tipos .chip").forEach(x=>x.onclick=()=>selectChip("#tipos",x,v=>tipo=v));
+  document.querySelectorAll("#estados .chip").forEach(x=>x.onclick=()=>selectChip("#estados",x,v=>estado=v));
+  render();
+}
+function selectChip(group,x,cb){
+ document.querySelectorAll(group+" .chip").forEach(y=>y.classList.remove("active"));
+ x.classList.add("active"); cb(x.dataset.v);
+}
+function guardarEvento(){
+ const desc=$("desc").value.trim();
+ if(!desc){alert("Escribí al menos la descripción de la novedad.");return}
+ if(!tipo) tipo="Otros"; if(!estado) estado="En proceso";
+ eventos.push({hora:$("hora").value,linea:$("linea").value,tipo,desc,accion:$("accion").value.trim(),estado});
+ $("desc").value="";$("accion").value="";tipo="";estado="";
+ document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+ const d=new Date(); $("hora").value=d.toTimeString().slice(0,5);
+ render();
+ window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
+}
+function render(){
+ $("contador").textContent=eventos.length;
+ $("lista").innerHTML=eventos.length?eventos.map((e,i)=>`
+ <div class="event">
+  <small>${e.hora} · ${e.tipo}</small><b>${e.linea}</b>
+  <div>${escapeHtml(e.desc)}</div>
+  ${e.accion?`<div style="margin-top:4px"><small>Acción:</small> ${escapeHtml(e.accion)}</div>`:""}
+  <span class="badge">${e.estado}</span>
+  <button class="ghost" style="float:right;padding:5px 8px;font-size:11px" onclick="borrar(${i})">Eliminar</button>
+ </div>`).join(""):"<p style='color:#667'>Todavía no registraste novedades.</p>";
+}
+function borrar(i){eventos.splice(i,1);render()}
+function generarReporte(){
+ const fecha=new Date($("fecha").value+"T00:00:00").toLocaleDateString("es-AR",{weekday:"long",day:"2-digit",month:"2-digit",year:"2-digit"});
+ let out=fecha.charAt(0).toUpperCase()+fecha.slice(1)+"\n";
+ if($("lote").value) out+="Lote "+$("lote").value+"\n";
+ out+="\nNOVEDADES DE PRODUCCIÓN\n\n";
+ const grupos={};
+ eventos.sort((a,b)=>a.linea.localeCompare(b.linea,"es",{numeric:true}));
+ eventos.forEach(e=>(grupos[e.linea]??=[]).push(e));
+ Object.keys(grupos).forEach(linea=>{
+   out+="**"+linea.toUpperCase()+"**\n";
+   grupos[linea].forEach(e=>{
+     out+="- "+e.desc;
+     if(e.accion) out+=" "+e.accion;
+     out+="\n";
+   });
+   out+="\n";
+ });
+ const pendientes=eventos.filter(e=>e.estado==="Pendiente"||e.estado==="En proceso");
+ if(pendientes.length){
+   out+="PENDIENTES / SEGUIMIENTO PARA PRÓXIMO TURNO\n\n";
+   pendientes.forEach(e=>out+="- "+e.linea+": "+e.desc+(e.accion?" — "+e.accion:"")+"\n");
+ }
+ $("reporte").textContent=out.trim();
+ $("reporteBox").classList.remove("hidden");
+}
+function copiarReporte(){
+ navigator.clipboard.writeText($("reporte").textContent).then(()=>alert("Reporte copiado. Ya podés pegarlo en WhatsApp, mail o donde quieras."));
+}
+function limpiarTodo(){
+ if(confirm("¿Seguro que querés comenzar un turno nuevo? Se borrarán las novedades cargadas en esta pantalla.")){
+   eventos=[]; $("lote").value=""; render(); $("reporteBox").classList.add("hidden");
+ }
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+init();
+</script>
+</body>
+</html>
