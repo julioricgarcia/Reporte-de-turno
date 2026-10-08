@@ -1,0 +1,1220 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1f2937">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#123b5d">
+<title>Reporte de Turno</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f3f6f8;
+    color: #1d2730;
+}
+
+header {
+    background: #123b5d;
+    color: white;
+    padding: 18px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 21px;
+}
+
+header small {
+    opacity: .8;
+}
+
+nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: white;
+    position: sticky;
+    top: 65px;
+    z-index: 4;
+    border-bottom: 1px solid #ddd;
+}
+
+nav button {
+    border: 0;
+    background: white;
+    padding: 12px 3px;
+    font-size: 12px;
+    color: #53636d;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+}
+
+nav button.active {
+    color: #123b5d;
+    border-bottom-color: #123b5d;
+    font-weight: bold;
+}
+
+main {
+    max-width: 850px;
+    margin: auto;
+    padding: 14px 12px 40px;
+}
+
+.tab {
+    display: none;
+}
+
+.tab.active {
+    display: block;
+}
+
+.card {
+    background: white;
+    border: 1px solid #dbe2e7;
+    border-radius: 14px;
+    padding: 15px;
+    margin-bottom: 12px;
+}
+
+h2 {
+    font-size: 17px;
+    margin: 2px 0 13px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.full {
+    grid-column: 1 / -1;
+}
+
+label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #50606b;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    border: 1px solid #ccd6dc;
+    border-radius: 9px;
+    padding: 11px;
+    font-size: 15px;
+    background: white;
+    color: #1d2730;
+}
+
+textarea {
+    min-height: 82px;
+    resize: vertical;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.btn {
+    border: 0;
+    border-radius: 9px;
+    padding: 11px 14px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.primary {
+    background: #123b5d;
+    color: white;
+}
+
+.secondary {
+    background: #e8eef2;
+    color: #234;
+}
+
+.danger {
+    background: #fde9e7;
+    color: #a52b20;
+}
+
+.item {
+    border-left: 5px solid #1d5f8d;
+    padding: 12px;
+    margin-bottom: 9px;
+    background: #f8fafb;
+    border-radius: 8px;
+}
+
+.item-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: center;
+}
+
+.item-title {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.badge {
+    padding: 4px 7px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: bold;
+    background: #e7eef3;
+}
+
+.resuelto {
+    background: #e4f5ec;
+    color: #176b43;
+}
+
+.proceso {
+    background: #fff2d9;
+    color: #8a5700;
+}
+
+.pendiente {
+    background: #fde9e7;
+    color: #a52b20;
+}
+
+.muted {
+    color: #687782;
+    font-size: 12px;
+}
+
+.empty {
+    text-align: center;
+    color: #687782;
+    padding: 25px 10px;
+}
+
+.report {
+    white-space: pre-wrap;
+    background: white;
+    border: 1px solid #dbe2e7;
+    border-radius: 10px;
+    padding: 14px;
+    line-height: 1.45;
+    min-height: 180px;
+}
+
+.line-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.line-row span {
+    flex: 1;
+}
+
+.notice {
+    font-size: 12px;
+    background: #eef5fa;
+    padding: 10px;
+    border-radius: 9px;
+    color: #365;
+}
+
+@media (max-width: 600px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .full {
+        grid-column: auto;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🏭 Reporte de Turno</h1>
+    <small>Registro rápido de novedades de producción</small>
+</header>
+
+<nav>
+    <button class="active" data-tab="nuevo">➕ Nueva</button>
+    <button data-tab="lista">📋 Novedades</button>
+    <button data-tab="reporte">📄 Reporte</button>
+    <button data-tab="config">⚙️ Config.</button>
+</nav>
+
+<main>
+
+<!-- NUEVA NOVEDAD -->
+
+<section id="nuevo" class="tab active">
+
+<div class="card">
+
+<h2>Nueva novedad</h2>
+
+<div class="grid">
+
+<div class="field">
+<label>Fecha</label>
+<input id="fecha" type="date">
+</div>
+
+<div class="field">
+<label>Turno</label>
+<select id="turno">
+<option>06–14</option>
+<option>14–22</option>
+<option>22–06</option>
+<option>Otro</option>
+</select>
+</div>
+
+<div class="field full">
+<label>Lote</label>
+<input id="lote" placeholder="Ej.: 280-1-26">
+</div>
+
+<div class="field">
+<label>Tipo de novedad</label>
+
+<select id="tipo">
+<option>Producción</option>
+<option>Mantenimiento</option>
+<option>Calidad</option>
+<option>Seguridad</option>
+<option>Personal</option>
+<option>Otros</option>
+</select>
+
+</div>
+
+<div class="field">
+<label>Línea / equipo</label>
+<select id="linea"></select>
+</div>
+
+<div class="field full">
+<label>Novedad</label>
+<textarea id="novedad"
+placeholder="¿Qué pasó?"></textarea>
+</div>
+
+<div class="field full">
+<label>Acción realizada</label>
+<textarea id="accion"
+placeholder="¿Qué se hizo?"></textarea>
+</div>
+
+<div class="field">
+<label>Estado</label>
+
+<select id="estado">
+<option>Resuelto</option>
+<option>En proceso</option>
+<option>Pendiente</option>
+</select>
+
+</div>
+
+</div>
+
+<div class="actions">
+
+<button class="btn primary"
+onclick="guardar()">
+💾 Guardar novedad
+</button>
+
+<button class="btn secondary"
+onclick="limpiar()">
+Limpiar
+</button>
+
+</div>
+
+</div>
+
+<div class="notice">
+Las novedades quedan guardadas en este navegador.
+</div>
+
+</section>
+
+
+<!-- LISTA -->
+
+<section id="lista" class="tab">
+
+<div class="card">
+
+<div style="display:flex;justify-content:space-between;align-items:center">
+
+<h2>Novedades cargadas</h2>
+
+<button class="btn danger"
+onclick="vaciar()">
+Vaciar
+</button>
+
+</div>
+
+<div id="listaNovedades"></div>
+
+</div>
+
+</section>
+
+
+<!-- REPORTE -->
+
+<section id="reporte" class="tab">
+
+<div class="card">
+
+<h2>Reporte listo para WhatsApp</h2>
+
+<div id="reporteTexto"
+class="report">
+</div>
+
+<div class="actions">
+
+<button class="btn primary"
+onclick="copiarReporte()">
+📋 Copiar reporte
+</button>
+
+<button class="btn secondary"
+onclick="compartirReporte()">
+📲 Compartir
+</button>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- CONFIGURACION -->
+
+<section id="config" class="tab">
+
+<div class="card">
+
+<h2>⚙️ Líneas y equipos</h2>
+
+<p class="muted">
+Podés agregar o quitar equipos sin modificar el programa.
+</p>
+
+<div class="field">
+
+<label>Agregar línea/equipo</label>
+
+<div style="display:flex;gap:8px">
+
+<input id="nuevaLinea"
+placeholder="Ej.: NUEVA LÍNEA">
+
+<button class="btn primary"
+onclick="agregarLinea()">
+Agregar
+</button>
+
+</div>
+
+</div>
+
+<div id="lineasConfig"
+style="margin-top:12px">
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+
+<script>
+
+/* =========================================
+   LINEAS / EQUIPOS
+========================================= */
+
+const DEFAULT_LINES = [
+
+"NID",
+"COMPRIMIDOS",
+"AW 251",
+"AW 250",
+"ROLLO",
+"MAINAR BOX",
+"ENV CHINA",
+"SIG 273",
+"SIG 274",
+"SIG 268",
+"PUNCH",
+"SAPAL 235",
+"SAPAL 275",
+"FABRIMA",
+"PAM",
+"NAGEMAS",
+"EXTRUDER",
+"COC MAST",
+"GOTITAS",
+"TROQUELADO",
+"COC NID",
+"TECMAR 276",
+"TECMAR 277",
+"TECMAR ACEITADOS",
+"TECMAR 278",
+"TECMAR 279",
+"TECMAR AZUCARADOS",
+"CHOCOLATE ELAB",
+"CHOCOLATE ENV",
+"SURTIDO DRF",
+"BOMBOS",
+"PAILAS",
+"TAREAS",
+"DOSIFICACION",
+"MASTICABLES"
+
+];
+
+
+/* =========================================
+   DATOS GUARDADOS
+========================================= */
+
+let lines =
+JSON.parse(localStorage.getItem("rt_lineas") || "null")
+|| DEFAULT_LINES;
+
+let novedades =
+JSON.parse(localStorage.getItem("rt_novedades") || "[]");
+
+
+/* =========================================
+   FUNCIONES GENERALES
+========================================= */
+
+const $ = id => document.getElementById(id);
+
+function esc(text) {
+
+    return String(text).replace(
+        /[&<>"']/g,
+        function(m) {
+
+            return {
+                "&":"&amp;",
+                "<":"&lt;",
+                ">":"&gt;",
+                '"':"&quot;",
+                "'":"&#39;"
+
+            }[m];
+
+        }
+    );
+
+}
+
+
+/* =========================================
+   FECHA ACTUAL
+========================================= */
+
+$("fecha").value =
+new Date().toISOString().slice(0,10);
+
+
+/* =========================================
+   NAVEGACION
+========================================= */
+
+document.querySelectorAll("nav button").forEach(button => {
+
+    button.onclick = () => {
+
+        document
+        .querySelectorAll("nav button")
+        .forEach(x => x.classList.remove("active"));
+
+        button.classList.add("active");
+
+        document
+        .querySelectorAll(".tab")
+        .forEach(x => x.classList.remove("active"));
+
+        $(button.dataset.tab)
+        .classList.add("active");
+
+
+        if (button.dataset.tab === "lista") {
+
+            renderLista();
+
+        }
+
+
+        if (button.dataset.tab === "reporte") {
+
+            generarReporte();
+
+        }
+
+
+        if (button.dataset.tab === "config") {
+
+            renderConfig();
+
+        }
+
+    };
+
+});
+
+
+/* =========================================
+   CARGAR LINEAS
+========================================= */
+
+function populateLines() {
+
+    let select = $("linea");
+
+    select.innerHTML =
+    '<option value="">Sin especificar</option>' +
+
+    lines
+    .map(x => `<option>${esc(x)}</option>`)
+    .join("");
+
+}
+
+populateLines();
+
+
+/* =========================================
+   GUARDAR NOVEDAD
+========================================= */
+
+function guardar() {
+
+    let n = {
+
+        id: Date.now(),
+
+        fecha: $("fecha").value,
+
+        turno: $("turno").value,
+
+        lote: $("lote").value.trim(),
+
+        tipo: $("tipo").value,
+
+        linea: $("linea").value,
+
+        novedad: $("novedad").value.trim(),
+
+        accion: $("accion").value.trim(),
+
+        estado: $("estado").value,
+
+        hora:
+        new Date().toLocaleTimeString(
+            "es-AR",
+            {
+                hour:"2-digit",
+                minute:"2-digit"
+            }
+        )
+
+    };
+
+
+    if (!n.novedad) {
+
+        alert(
+            "Escribí la novedad antes de guardar."
+        );
+
+        $("novedad").focus();
+
+        return;
+
+    }
+
+
+    novedades.push(n);
+
+    localStorage.setItem(
+        "rt_novedades",
+        JSON.stringify(novedades)
+    );
+
+
+    alert("Novedad guardada.");
+
+    limpiar(false);
+
+}
+
+
+/* =========================================
+   LIMPIAR FORMULARIO
+========================================= */
+
+function limpiar(reset = true) {
+
+    $("novedad").value = "";
+
+    $("accion").value = "";
+
+    $("linea").value = "";
+
+    $("estado").value = "Resuelto";
+
+
+    if (reset) {
+
+        $("fecha").value =
+        new Date().toISOString().slice(0,10);
+
+    }
+
+}
+
+
+/* =========================================
+   MOSTRAR NOVEDADES
+========================================= */
+
+function renderLista() {
+
+    let el = $("listaNovedades");
+
+
+    if (!novedades.length) {
+
+        el.innerHTML =
+        '<div class="empty">' +
+        'Todavía no hay novedades cargadas.' +
+        '</div>';
+
+        return;
+
+    }
+
+
+    el.innerHTML =
+
+    novedades
+    .slice()
+    .reverse()
+    .map(n => `
+
+        <div class="item">
+
+            <div class="item-top">
+
+                <div class="item-title">
+
+                    ${esc(n.linea || "Sin línea")}
+                    ·
+                    ${esc(n.tipo)}
+
+                </div>
+
+
+                <span class="badge
+                ${
+                    n.estado === "Resuelto"
+                    ? "resuelto"
+                    : n.estado === "En proceso"
+                    ? "proceso"
+                    : "pendiente"
+                }">
+
+                    ${esc(n.estado)}
+
+                </span>
+
+            </div>
+
+
+            <div style="margin-top:7px">
+
+                ${esc(n.novedad)}
+
+            </div>
+
+
+            ${
+                n.accion
+
+                ?
+
+                `<div class="muted"
+                style="margin-top:5px">
+
+                    <b>Acción:</b>
+                    ${esc(n.accion)}
+
+                </div>`
+
+                :
+
+                ""
+            }
+
+
+            <div class="muted"
+            style="margin-top:6px">
+
+                ${esc(n.fecha)}
+                ·
+                ${esc(n.turno)}
+                ·
+                ${esc(n.hora)}
+
+                ${
+                    n.lote
+                    ? " · Lote " + esc(n.lote)
+                    : ""
+                }
+
+            </div>
+
+
+            <button
+            class="btn danger"
+            style="margin-top:8px;padding:7px 10px"
+            onclick="eliminar(${n.id})">
+
+                Eliminar
+
+            </button>
+
+        </div>
+
+    `)
+    .join("");
+
+}
+
+
+/* =========================================
+   ELIMINAR UNA NOVEDAD
+========================================= */
+
+function eliminar(id) {
+
+    novedades =
+    novedades.filter(n => n.id !== id);
+
+    localStorage.setItem(
+        "rt_novedades",
+        JSON.stringify(novedades)
+    );
+
+    renderLista();
+
+}
+
+
+/* =========================================
+   VACIAR TODAS
+========================================= */
+
+function vaciar() {
+
+    if (
+        confirm(
+            "¿Eliminar todas las novedades?"
+        )
+    ) {
+
+        novedades = [];
+
+        localStorage.setItem(
+            "rt_novedades",
+            "[]"
+        );
+
+        renderLista();
+
+    }
+
+}
+
+
+/* =========================================
+   GENERAR REPORTE
+========================================= */
+
+function generarReporte() {
+
+    let el = $("reporteTexto");
+
+
+    if (!novedades.length) {
+
+        el.textContent =
+        "No hay novedades cargadas.";
+
+        return;
+
+    }
+
+
+    let primera = novedades[0];
+
+
+    let out =
+    `REPORTE DE TURNO\n`;
+
+
+    out +=
+    `${primera.fecha
+    .split("-")
+    .reverse()
+    .join("/")} · Turno ${primera.turno}`;
+
+
+    let lote =
+    novedades.find(n => n.lote)?.lote;
+
+
+    if (lote) {
+
+        out +=
+        `\nLote ${lote}`;
+
+    }
+
+
+    out += "\n";
+
+
+    const tipos = [
+
+        "Producción",
+        "Mantenimiento",
+        "Calidad",
+        "Seguridad",
+        "Personal",
+        "Otros"
+
+    ];
+
+
+    tipos.forEach(tipo => {
+
+        let lista =
+        novedades.filter(
+            n => n.tipo === tipo
+        );
+
+
+        if (!lista.length) return;
+
+
+        out +=
+        `\n${tipo.toUpperCase()}\n`;
+
+
+        lista.forEach(n => {
+
+            out +=
+            `- `;
+
+
+            if (n.linea) {
+
+                out +=
+                `${n.linea}: `;
+
+            }
+
+
+            out +=
+            n.novedad;
+
+
+            if (n.accion) {
+
+                out +=
+                ` (${n.accion})`;
+
+            }
+
+
+            if (n.estado !== "Resuelto") {
+
+                out +=
+                ` [${n.estado}]`;
+
+            }
+
+
+            out += "\n";
+
+        });
+
+    });
+
+
+    el.textContent =
+    out.trim();
+
+}
+
+
+/* =========================================
+   COPIAR REPORTE
+========================================= */
+
+async function copiarReporte() {
+
+    generarReporte();
+
+
+    try {
+
+        await navigator.clipboard.writeText(
+            $("reporteTexto").textContent
+        );
+
+
+        alert(
+            "Reporte copiado. Ya podés pegarlo en WhatsApp."
+        );
+
+
+    } catch (e) {
+
+        alert(
+            "No se pudo copiar automáticamente."
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   COMPARTIR
+========================================= */
+
+async function compartirReporte() {
+
+    generarReporte();
+
+
+    let texto =
+    $("reporteTexto").textContent;
+
+
+    if (navigator.share) {
+
+        try {
+
+            await navigator.share({
+
+                title:
+                "Reporte de Turno",
+
+                text:
+                texto
+
+            });
+
+        } catch (e) {}
+
+    } else {
+
+        copiarReporte();
+
+    }
+
+}
+
+
+/* =========================================
+   AGREGAR LINEA
+========================================= */
+
+function agregarLinea() {
+
+    let input =
+    $("nuevaLinea");
+
+
+    let nombre =
+    input.value.trim().toUpperCase();
+
+
+    if (!nombre) {
+
+        alert(
+            "Escribí el nombre de la línea."
+        );
+
+        return;
+
+    }
+
+
+    if (lines.includes(nombre)) {
+
+        alert(
+            "Esa línea ya existe."
+        );
+
+        return;
+
+    }
+
+
+    lines.push(nombre);
+
+
+    localStorage.setItem(
+        "rt_lineas",
+        JSON.stringify(lines)
+    );
+
+
+    input.value = "";
+
+
+    populateLines();
+
+    renderConfig();
+
+
+    alert(
+        "Línea agregada correctamente."
+    );
+
+}
+
+
+/* =========================================
+   ELIMINAR LINEA
+========================================= */
+
+function borrarLinea(index) {
+
+    if (
+        confirm(
+            "¿Quitar " +
+            lines[index] +
+            " de la lista?"
+        )
+    ) {
+
+        lines.splice(index, 1);
+
+
+        localStorage.setItem(
+            "rt_lineas",
+            JSON.stringify(lines)
+        );
+
+
+        populateLines();
+
+        renderConfig();
+
+    }
+
+}
+
+
+/* =========================================
+   MOSTRAR CONFIGURACION
+========================================= */
+
+function renderConfig() {
+
+    $("lineasConfig").innerHTML =
+
+    lines
+    .map(
+
+        (linea, index) => `
+
+        <div class="line-row">
+
+            <span>
+
+                ${index + 1}.
+                ${esc(linea)}
+
+            </span>
+
+
+            <button
+            class="btn danger"
+            style="padding:6px 9px"
+            onclick="borrarLinea(${index})">
+
+                Quitar
+
+            </button>
+
+        </div>
+
+        `
+
+    )
+    .join("");
+
+}
+
+
+renderConfig();
+
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+</script>
+</body>
+</html>
