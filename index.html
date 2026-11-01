@@ -886,110 +886,69 @@ function vaciar() {
    GENERAR REPORTE
 ========================================= */
 
+let reporteWhatsApp = "";
+
 function generarReporte() {
 
     let el = $("reporteTexto");
 
-
     if (!novedades.length) {
-
-        el.textContent =
-        "No hay novedades cargadas.";
-
+        reporteWhatsApp = "";
+        el.textContent = "No hay novedades cargadas.";
         return;
-
     }
-
 
     let primera = novedades[0];
 
+    let out = `REPORTE DE TURNO\n`;
 
-    let out =
-    `REPORTE DE TURNO\n`;
+    out += `${primera.fecha
+        .split("-")
+        .reverse()
+        .join("/")} · Turno ${primera.turno}`;
 
-
-    out +=
-    `${primera.fecha
-    .split("-")
-    .reverse()
-    .join("/")} · Turno ${primera.turno}`;
-
-
-    let lote =
-    novedades.find(n => n.lote)?.lote;
-
+    let lote = novedades.find(n => n.lote)?.lote;
 
     if (lote) {
-
-        out +=
-        `\nLote ${lote}`;
-
+        out += `\nLote ${lote}`;
     }
-
 
     out += "\n";
 
-
     const tipos = [
-
         "Producción",
         "Mantenimiento",
         "Calidad",
         "Seguridad",
         "Personal",
         "Otros"
-
     ];
-
 
     tipos.forEach(tipo => {
 
-        let lista =
-        novedades.filter(
-            n => n.tipo === tipo
-        );
-
+        let lista = novedades.filter(n => n.tipo === tipo);
 
         if (!lista.length) return;
 
-
-        out +=
-        `\n${tipo.toUpperCase()}\n`;
-
+        out += `\n${tipo.toUpperCase()}\n`;
 
         lista.forEach(n => {
 
-            out +=
-            `- `;
-
+            out += `- `;
 
             if (n.linea) {
-
-                out +=
-                `${n.linea}: `;
-
+                out += `*${n.linea}*: `;
             }
 
-
-            out +=
-            n.novedad;
-
+            out += n.novedad;
 
             if (n.accion) {
-
-                out +=
-                ` (${n.accion})`;
-
+                out += ` (${n.accion})`;
             }
-
 
             if (n.estado !== "Resuelto") {
-
-                out +=
-                ` [${n.estado}]`;
-
+                out += ` [${n.estado}]`;
             }
-
 
             out += "\n";
 
@@ -997,12 +956,67 @@ function generarReporte() {
 
     });
 
+    reporteWhatsApp = out.trim();
 
-    el.textContent =
-    out.trim();
+    // Mostrar las líneas en negrita dentro de la aplicación
+    el.innerHTML = esc(reporteWhatsApp).replace(
+        /\*([^*\n]+)\*/g,
+        "<strong>$1</strong>"
+    );
+}
+
+
+// COPIAR REPORTE
+
+async function copiarReporte() {
+
+    generarReporte();
+
+    let texto = reporteWhatsApp ||
+        "No hay novedades cargadas.";
+
+    try {
+
+        await navigator.clipboard.writeText(texto);
+
+        alert("Reporte copiado. Ya podés pegarlo en WhatsApp.");
+
+    } catch (e) {
+
+        alert("No se pudo copiar automáticamente.");
+
+    }
 
 }
 
+
+// COMPARTIR REPORTE
+
+async function compartirReporte() {
+
+    generarReporte();
+
+    let texto = reporteWhatsApp ||
+        "No hay novedades cargadas.";
+
+    if (navigator.share) {
+
+        try {
+
+            await navigator.share({
+                title: "Reporte de Turno",
+                text: texto
+            });
+
+        } catch (e) {}
+
+    } else {
+
+        copiarReporte();
+
+    }
+
+}
 
 /* =========================================
    COPIAR REPORTE
