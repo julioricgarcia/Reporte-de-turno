@@ -992,6 +992,9 @@ async function copiarReporte() {
 
 // COMPARTIR REPORTE
 
+
+// COMPARTIR REPORTE - FORMATO WORD / GOOGLE DOCS
+
 async function compartirReporte() {
 
     generarReporte();
@@ -999,20 +1002,73 @@ async function compartirReporte() {
     let texto = reporteWhatsApp ||
         "No hay novedades cargadas.";
 
-    if (navigator.share) {
+    // Convertir el reporte a HTML con negritas reales
+    let contenidoHTML = esc(texto)
+        .replace(
+            /\*([^*\n]+)\*/g,
+            "<strong>$1</strong>"
+        )
+        .replace(/\n/g, "<br>");
 
-        try {
+    let html = `
+        <html>
+        <body>
+            <div style="
+                font-family: Arial, sans-serif;
+                font-size: 11pt;
+                line-height: 1.5;
+                white-space: normal;
+            ">
+                ${contenidoHTML}
+            </div>
+        </body>
+        </html>
+    `;
 
-            await navigator.share({
-                title: "Reporte de Turno",
-                text: texto
+    // Versión de texto sin asteriscos
+    let textoPlano = texto.replace(/\*([^*\n]+)\*/g, "$1");
+
+    try {
+
+        if (
+            navigator.clipboard &&
+            navigator.clipboard.write &&
+            window.ClipboardItem
+        ) {
+
+            const contenido = new ClipboardItem({
+
+                "text/html": new Blob(
+                    [html],
+                    { type: "text/html" }
+                ),
+
+                "text/plain": new Blob(
+                    [textoPlano],
+                    { type: "text/plain" }
+                )
+
             });
 
-        } catch (e) {}
+            await navigator.clipboard.write([contenido]);
 
-    } else {
+            alert(
+                "Reporte copiado con formato. Ya podés pegarlo en Word o Google Docs."
+            );
 
-        copiarReporte();
+        } else {
+
+            alert(
+                "Tu navegador no permite copiar el formato enriquecido. Probá desde Chrome."
+            );
+
+        }
+
+    } catch (e) {
+
+        alert(
+            "No se pudo copiar el reporte con formato. Verificá que estés usando HTTPS y probá nuevamente."
+        );
 
     }
 
