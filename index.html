@@ -886,6 +886,7 @@ function vaciar() {
    GENERAR REPORTE
 ========================================= */
 
+
 let reporteWhatsApp = "";
 
 function generarReporte() {
@@ -932,25 +933,41 @@ function generarReporte() {
 
         out += `\n${tipo.toUpperCase()}\n`;
 
+        // Agrupar novedades por línea
+        let grupos = new Map();
+
         lista.forEach(n => {
 
-            out += `- `;
+            let linea = n.linea || "Sin especificar";
 
-            if (n.linea) {
-                out += `*${n.linea}*: `;
+            if (!grupos.has(linea)) {
+                grupos.set(linea, []);
             }
 
-            out += n.novedad;
+            grupos.get(linea).push(n);
 
-            if (n.accion) {
-                out += ` (${n.accion})`;
-            }
+        });
 
-            if (n.estado !== "Resuelto") {
-                out += ` [${n.estado}]`;
-            }
+        // Generar el reporte agrupado
+        grupos.forEach((items, linea) => {
 
-            out += "\n";
+            out += `\n*${linea}*\n`;
+
+            items.forEach(n => {
+
+                out += `- ${n.novedad}`;
+
+                if (n.accion) {
+                    out += ` (${n.accion})`;
+                }
+
+                if (n.estado !== "Resuelto") {
+                    out += ` [${n.estado}]`;
+                }
+
+                out += "\n";
+
+            });
 
         });
 
@@ -964,6 +981,7 @@ function generarReporte() {
         "<strong>$1</strong>"
     );
 }
+
 
 
 // COPIAR REPORTE
